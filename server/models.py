@@ -83,9 +83,9 @@ class FuelLog(Base):
     __tablename__ = "fuel_logs"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    vehicle_id = Column(Integer, ForeignKey("vehicles.id", ondelete="CASCADE"), nullable=False)
-    date = Column(Date, nullable=False)
-    odometer_reading = Column(Float, nullable=False)  # Current odometer in km
+    vehicle_id = Column(Integer, ForeignKey("vehicles.id", ondelete="CASCADE"), nullable=False, index=True)
+    date = Column(Date, nullable=False, index=True)
+    odometer_reading = Column(Float, nullable=False, index=True)  # Current odometer in km
     fuel_quantity = Column(Float, nullable=False)  # Liters filled
     price_per_liter = Column(Float, nullable=False)  # ₹ per liter
     total_cost = Column(Float, nullable=False)  # Auto-computed: fuel_quantity × price_per_liter
@@ -119,9 +119,9 @@ class Expense(Base):
     ]
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    vehicle_id = Column(Integer, ForeignKey("vehicles.id", ondelete="CASCADE"), nullable=False)
-    date = Column(Date, nullable=False)
-    category = Column(String, nullable=False)  # One of VALID_CATEGORIES
+    vehicle_id = Column(Integer, ForeignKey("vehicles.id", ondelete="CASCADE"), nullable=False, index=True)
+    date = Column(Date, nullable=False, index=True)
+    category = Column(String, nullable=False, index=True)  # One of VALID_CATEGORIES
     title = Column(String, nullable=False)  # e.g., 'Oil Change', 'Annual Insurance'
     amount = Column(Float, nullable=False)  # ₹ cost
     odometer_reading = Column(Float, nullable=True)  # Odometer at time of expense (optional)

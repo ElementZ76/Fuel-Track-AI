@@ -11,26 +11,11 @@ from server import models, schemas
 from server.services.mileage import enrich_fuel_logs
 
 
-def get_monthly_breakdown(db: Session, vehicle_id: int):
+def get_monthly_breakdown(enriched_logs: list, expenses: list):
     """
     Generate a monthly breakdown of costs and mileage.
+    Accepts pre-fetched + pre-enriched data to avoid double-querying.
     """
-    # Fetch all logs and expenses for the vehicle
-    vehicle = db.query(models.Vehicle).filter(models.Vehicle.id == vehicle_id).first()
-    if not vehicle:
-        return []
-        
-    logs = db.query(models.FuelLog)\
-             .filter(models.FuelLog.vehicle_id == vehicle_id)\
-             .order_by(models.FuelLog.odometer_reading.asc())\
-             .all()
-             
-    expenses = db.query(models.Expense)\
-                 .filter(models.Expense.vehicle_id == vehicle_id)\
-                 .all()
-                 
-    enriched_logs = enrich_fuel_logs(logs, vehicle.initial_odometer)
-    
     # Group by month (YYYY-MM)
     monthly_data = defaultdict(lambda: {
         "distance_km": 0.0,
@@ -84,6 +69,7 @@ def get_monthly_breakdown(db: Session, vehicle_id: int):
 def get_vehicle_stats(db: Session, vehicle_id: int) -> schemas.MileageStats:
     """
     Calculate overall vehicle statistics (fuel + expenses).
+    Fetches data once, reuses enriched result for both stats and monthly breakdown.
     """
     vehicle = db.query(models.Vehicle).filter(models.Vehicle.id == vehicle_id).first()
     if not vehicle:
@@ -137,7 +123,8 @@ def get_vehicle_stats(db: Session, vehicle_id: int) -> schemas.MileageStats:
         ) for cat, data in expense_categories.items()
     ]
     
-    monthly_breakdown = get_monthly_breakdown(db, vehicle_id)
+    # Reuse already-fetched data — no second DB query
+    monthly_breakdown = get_monthly_breakdown(enriched_logs, expenses)
     
     return schemas.MileageStats(
         vehicle_id=vehicle_id,
