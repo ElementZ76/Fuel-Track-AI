@@ -25,21 +25,21 @@
 - [ ] **Blueprint approved by user** ← WAITING
 
 ### Phase 2: L — Link (Connectivity)
-- [ ] Set up Python virtual environment
-- [ ] Install FastAPI + SQLAlchemy + uvicorn + pydantic
-- [ ] Verify backend server starts with empty app
+- [x] Set up Python virtual environment
+- [x] Install FastAPI + SQLAlchemy + uvicorn + pydantic
+- [x] Verify backend server starts with empty app
 
 ### Phase 3: A — Architect (3-Layer Build)
-- [ ] `server/database.py` — SQLAlchemy engine + session
-- [ ] `server/models.py` — User, Vehicle, FuelLog, Expense ORM models
-- [ ] `server/schemas.py` — All Pydantic input/output schemas
-- [ ] `server/routers/auth.py` — User CRUD + PIN login
-- [ ] `server/routers/vehicles.py` — Vehicle CRUD
-- [ ] `server/services/mileage.py` — Mileage calculation logic
-- [ ] `server/routers/fuel_logs.py` — Fuel log CRUD + mileage
-- [ ] `server/routers/expenses.py` — Expense CRUD + category filter
-- [ ] `server/services/stats.py` — Stats aggregation (fuel + expenses)
-- [ ] `server/main.py` — Wire all routers, CORS, startup
+- [x] `server/database.py` — SQLAlchemy engine + session
+- [x] `server/models.py` — User, Vehicle, FuelLog, Expense ORM models
+- [x] `server/schemas.py` — All Pydantic input/output schemas
+- [x] `server/routers/auth.py` — User CRUD + PIN login
+- [x] `server/routers/vehicles.py` — Vehicle CRUD
+- [x] `server/services/mileage.py` — Mileage calculation logic
+- [x] `server/routers/fuel_logs.py` — Fuel log CRUD + mileage
+- [x] `server/routers/expenses.py` — Expense CRUD + category filter
+- [x] `server/services/stats.py` — Stats aggregation (fuel + expenses)
+- [x] `server/main.py` — Wire all routers, CORS, startup
 - [ ] **🧪 Full backend test — all 25 endpoints**
 
 ### Phase 3.5: Frontend (Figma-Driven)
