@@ -9,7 +9,7 @@ Organized into:
 All schemas follow the Data Schema defined in gemini.md (Project Constitution).
 """
 
-from datetime import date, datetime
+import datetime
 from typing import Optional
 from pydantic import BaseModel, Field, field_validator
 
@@ -51,7 +51,7 @@ class UserRead(BaseModel):
     id: int
     username: str
     display_name: Optional[str] = None
-    created_at: datetime
+    created_at: datetime.datetime
 
     model_config = {"from_attributes": True}
 
@@ -127,7 +127,7 @@ class VehicleRead(BaseModel):
     tank_capacity: Optional[float] = None
     initial_odometer: float
     notes: Optional[str] = None
-    created_at: datetime
+    created_at: datetime.datetime
 
     model_config = {"from_attributes": True}
 
@@ -142,7 +142,7 @@ class FuelLogCreate(BaseModel):
     total_cost is auto-computed as fuel_quantity × price_per_liter.
     """
     vehicle_id: int = Field(..., description="Vehicle this log belongs to")
-    date: date = Field(..., description="Date of fill-up")
+    date: datetime.date = Field(..., description="Date of fill-up")
     odometer_reading: float = Field(..., gt=0, description="Current odometer in km")
     fuel_quantity: float = Field(..., gt=0, description="Liters filled")
     price_per_liter: float = Field(..., gt=0, description="₹ per liter")
@@ -166,7 +166,7 @@ class FuelLogCreate(BaseModel):
 
 class FuelLogUpdate(BaseModel):
     """Input: Update a fuel log entry (all optional)."""
-    date: Optional[date] = None
+    date: Optional[datetime.date] = None
     odometer_reading: Optional[float] = Field(None, gt=0)
     fuel_quantity: Optional[float] = Field(None, gt=0)
     price_per_liter: Optional[float] = Field(None, gt=0)
@@ -195,7 +195,7 @@ class FuelLogRead(BaseModel):
     """
     id: int
     vehicle_id: int
-    date: date
+    date: datetime.date
     odometer_reading: float
     fuel_quantity: float
     price_per_liter: float
@@ -205,7 +205,7 @@ class FuelLogRead(BaseModel):
     station_name: Optional[str] = None
     missed: bool
     notes: Optional[str] = None
-    created_at: datetime
+    created_at: datetime.datetime
     # Computed fields — populated by the service layer
     distance_km: Optional[float] = None
     mileage_kmpl: Optional[float] = None
@@ -227,7 +227,7 @@ VALID_EXPENSE_CATEGORIES = [
 class ExpenseCreate(BaseModel):
     """Input: Add a non-fuel expense."""
     vehicle_id: int = Field(..., description="Vehicle this expense belongs to")
-    date: date = Field(..., description="Date of expense")
+    date: datetime.date = Field(..., description="Date of expense")
     category: str = Field(..., description="Expense category")
     title: str = Field(..., min_length=1, max_length=200, description="Expense title")
     amount: float = Field(..., gt=0, description="₹ cost")
@@ -247,7 +247,7 @@ class ExpenseCreate(BaseModel):
 
 class ExpenseUpdate(BaseModel):
     """Input: Update an expense entry (all optional)."""
-    date: Optional[date] = None
+    date: Optional[datetime.date] = None
     category: Optional[str] = None
     title: Optional[str] = Field(None, min_length=1, max_length=200)
     amount: Optional[float] = Field(None, gt=0)
@@ -271,13 +271,13 @@ class ExpenseRead(BaseModel):
     """Output: Expense entry."""
     id: int
     vehicle_id: int
-    date: date
+    date: datetime.date
     category: str
     title: str
     amount: float
     odometer_reading: Optional[float] = None
     notes: Optional[str] = None
-    created_at: datetime
+    created_at: datetime.datetime
 
     model_config = {"from_attributes": True}
 

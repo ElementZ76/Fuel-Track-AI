@@ -11,49 +11,10 @@ from sqlalchemy import desc
 
 from server.database import get_db
 from server import models, schemas
-from server.services.mileage import calculate_mileage
+from server.services.mileage import calculate_mileage, enrich_fuel_logs
 from server.services.stats import get_vehicle_stats, get_monthly_breakdown
 
 router = APIRouter(prefix="/vehicles/{vehicle_id}/fuel-logs", tags=["Fuel Logs"])
-
-
-def enrich_fuel_logs(logs: List[models.FuelLog], initial_odometer: float) -> List[dict]:
-    """
-    Enrich fuel logs with computed distance_km and mileage_kmpl.
-    Requires logs to be sorted by odometer_reading ascending.
-    """
-    enriched_logs = []
-    prev_odo = initial_odometer
-    prev_is_full_tank = True # Assume initial is a baseline
-
-    for log in logs:
-        log_dict = {c.name: getattr(log, c.name) for c in log.__table__.columns}
-        
-        # Calculate distance
-        distance_km = log.odometer_reading - prev_odo
-        if distance_km > 0:
-            log_dict['distance_km'] = round(distance_km, 2)
-        else:
-            log_dict['distance_km'] = None
-            
-        # Calculate mileage
-        mileage = calculate_mileage(
-            current_odo=log.odometer_reading,
-            prev_odo=prev_odo,
-            fuel_qty=log.fuel_quantity,
-            is_full_tank=log.is_full_tank and prev_is_full_tank,
-            missed=log.missed
-        )
-        log_dict['mileage_kmpl'] = mileage
-        
-        enriched_logs.append(log_dict)
-        
-        # Update prev for next iteration
-        prev_odo = log.odometer_reading
-        prev_is_full_tank = log.is_full_tank
-        
-    # Return in original order (usually descending for display)
-    return enriched_logs[::-1]
 
 
 @router.post("/", response_model=schemas.FuelLogRead, status_code=status.HTTP_201_CREATED)

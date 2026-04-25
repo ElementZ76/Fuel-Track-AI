@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from server import models, schemas
-from server.routers.fuel_logs import enrich_fuel_logs
+from server.services.mileage import enrich_fuel_logs
 
 
 def get_monthly_breakdown(db: Session, vehicle_id: int):

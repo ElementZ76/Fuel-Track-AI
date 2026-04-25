@@ -40,7 +40,7 @@
 - [x] `server/routers/expenses.py` — Expense CRUD + category filter
 - [x] `server/services/stats.py` — Stats aggregation (fuel + expenses)
 - [x] `server/main.py` — Wire all routers, CORS, startup
-- [ ] **🧪 Full backend test — all 25 endpoints**
+- [x] **🧪 Full backend test — all 25 endpoints**
 
 ### Phase 3.5: Frontend (Figma-Driven)
 - [ ] Ask user for Figma designs
