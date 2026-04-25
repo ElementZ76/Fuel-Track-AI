@@ -1,0 +1,8 @@
+## What We Are Building & Our Final Aim
+Right now, we are building the foundational full-stack infrastructure for **FuelTrack AI**, starting with secure database schemas, REST APIs, and a React frontend shell for logging vehicle expenses and fuel data. The final aim is to evolve this foundation into a smart, predictive web application that doesn't just passively track costs, but actively forecasts future maintenance needs, optimizes fuel economy, and provides an intelligent conversational interface for vehicle management.
+
+## Our Current Tech Stack
+Our architecture is split into a modern, high-performance frontend and a robust, machine-learning-ready backend. The client side is scaffolded with **React** and **Vite**, styled rapidly using **Tailwind CSS**, and navigated via **React Router**. The server side is powered by **Python** and **FastAPI**, which handles the API endpoints and connects securely to a **PostgreSQL** database hosted on **Supabase** (utilizing a connection pooler for seamless WSL integration).
+
+### Features That Can Be Implemented
+Looking ahead, the system is perfectly positioned to implement several advanced features. We can integrate **scikit-learn** for time-series forecasting to predict upcoming maintenance expenses based on historical odometer and fuel logs. We can also build a real-time analytics dashboard using **Chart.js** to visualize spending trends and km/L efficiency, develop backend algorithms to auto-categorize expenses, and ultimately integrate **AWS Lex** to create an AI assistant that users can interact with to query their vehicle's health and financial metrics naturally.
