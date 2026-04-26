@@ -27,9 +27,14 @@ def set_sqlite_pragmas(dbapi_connection, connection_record):
     - journal_mode=WAL : Write-Ahead Logging — better read/write concurrency.
     - synchronous=NORMAL: Balanced durability without full fsync on every write.
     """
+    import sqlite3
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.execute("PRAGMA journal_mode=WAL")
+    try:
+        cursor.execute("PRAGMA journal_mode=WAL")
+    except sqlite3.OperationalError:
+        # Fails gracefully on WSL mounts where POSIX locks are unsupported
+        pass
     cursor.execute("PRAGMA synchronous=NORMAL")
     cursor.close()
 
