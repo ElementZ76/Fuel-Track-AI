@@ -11,7 +11,7 @@ from sqlalchemy import desc
 
 from server.database import get_db
 from server import models, schemas
-from server.services.mileage import calculate_mileage, enrich_fuel_logs
+from server.services.mileage import enrich_fuel_logs
 from server.services.stats import get_vehicle_stats, get_monthly_breakdown
 
 router = APIRouter(prefix="/vehicles/{vehicle_id}/fuel-logs", tags=["Fuel Logs"])

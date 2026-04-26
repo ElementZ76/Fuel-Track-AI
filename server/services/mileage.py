@@ -6,11 +6,6 @@ Contains deterministic logic for computing fuel efficiency.
 from typing import Optional, List
 from server import models
 
-
-    # Deprecated in favor of inline logic in enrich_fuel_logs
-    pass
-
-
 def enrich_fuel_logs(logs: List[models.FuelLog], initial_odometer: float) -> List[dict]:
     """
     Enrich fuel logs with computed distance_km and mileage_kmpl.

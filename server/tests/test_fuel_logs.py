@@ -64,7 +64,7 @@ def test_fuel_log_mileage_sequence(client, vehicle_id):
     assert newest["distance_km"] == 200.0
     assert newest["mileage_kmpl"] == 10.0
 
-def test_fuel_log_partial_fill_invalidates_mileage(client, vehicle_id):
+def test_fuel_log_partial_fill_accumulates_mileage(client, vehicle_id):
     # Base
     client.post(f"/api/vehicles/{vehicle_id}/fuel-logs/", json={
         "vehicle_id": vehicle_id, "date": "2023-10-01", "odometer_reading": 200.0, 
@@ -79,8 +79,10 @@ def test_fuel_log_partial_fill_invalidates_mileage(client, vehicle_id):
     res = client.get(f"/api/vehicles/{vehicle_id}/fuel-logs/")
     logs = res.json()
     newest = logs[0]
-    # Prev was partial, so current mileage should be null
-    assert newest["mileage_kmpl"] is None
+    # Prev was partial, so accumulated fuel = 10 + 20 = 30
+    # Distance since last full (100) = 300
+    # Mileage = 300 / 30 = 10.0
+    assert newest["mileage_kmpl"] == 10.0
 
 def test_get_stats(client, vehicle_id):
     # Add expense
