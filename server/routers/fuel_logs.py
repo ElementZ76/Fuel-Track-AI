@@ -46,10 +46,9 @@ def add_fuel_log(vehicle_id: int, log_create: schemas.FuelLogCreate, db: Session
                    f"initial odometer."
         )
 
-    # Auto-calculate total_cost; exclude vehicle_id from dump (passed separately)
-    total_cost = round(log_create.fuel_quantity * log_create.price_per_liter, 2)
+    # total_cost, fuel_quantity, and price_per_liter are fully populated by the Pydantic validator
     data = log_create.model_dump(exclude={"vehicle_id"})
-    db_log = models.FuelLog(vehicle_id=vehicle_id, total_cost=total_cost, **data)
+    db_log = models.FuelLog(vehicle_id=vehicle_id, **data)
     db.add(db_log)
     db.commit()
     db.refresh(db_log)
@@ -133,8 +132,14 @@ def update_fuel_log(vehicle_id: int, log_id: int, log_update: schemas.FuelLogUpd
     for key, value in update_data.items():
         setattr(db_log, key, value)
         
-    # Recompute total cost
-    db_log.total_cost = round(db_log.fuel_quantity * db_log.price_per_liter, 2)
+    # Maintain mathematical consistency if any fuel metric is updated
+    if any(k in update_data for k in ["fuel_quantity", "price_per_liter", "total_cost"]):
+        if "total_cost" not in update_data:
+            db_log.total_cost = round(db_log.fuel_quantity * db_log.price_per_liter, 2)
+        elif "fuel_quantity" not in update_data:
+            db_log.fuel_quantity = round(db_log.total_cost / db_log.price_per_liter, 2)
+        elif "price_per_liter" not in update_data:
+            db_log.price_per_liter = round(db_log.total_cost / db_log.fuel_quantity, 2)
     
     db.commit()
     db.refresh(db_log)

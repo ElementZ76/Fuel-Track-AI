@@ -11,7 +11,7 @@ All schemas follow the Data Schema defined in gemini.md (Project Constitution).
 
 import datetime
 from typing import Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # =============================================================================
@@ -144,8 +144,9 @@ class FuelLogCreate(BaseModel):
     vehicle_id: int = Field(..., description="Vehicle this log belongs to")
     date: datetime.date = Field(..., description="Date of fill-up")
     odometer_reading: float = Field(..., gt=0, description="Current odometer in km")
-    fuel_quantity: float = Field(..., gt=0, description="Liters filled")
-    price_per_liter: float = Field(..., gt=0, description="₹ per liter")
+    fuel_quantity: Optional[float] = Field(None, gt=0, description="Liters filled")
+    price_per_liter: Optional[float] = Field(None, gt=0, description="₹ per liter")
+    total_cost: Optional[float] = Field(None, gt=0, description="Total fuel cost")
     is_full_tank: bool = Field(True, description="Full tank fill-up?")
     fuel_type: Optional[str] = Field(None, description="petrol | diesel | cng")
     station_name: Optional[str] = Field(None, description="Fuel station name")
@@ -163,6 +164,21 @@ class FuelLogCreate(BaseModel):
             raise ValueError(f"fuel_type must be one of: {', '.join(valid)}")
         return v
 
+    @model_validator(mode='after')
+    def calculate_missing_metric(self):
+        provided = sum(1 for x in [self.fuel_quantity, self.price_per_liter, self.total_cost] if x is not None)
+        if provided < 2:
+            raise ValueError("Must provide at least two of: fuel_quantity, price_per_liter, total_cost")
+            
+        if self.total_cost is None:
+            self.total_cost = round(self.fuel_quantity * self.price_per_liter, 2)
+        elif self.fuel_quantity is None:
+            self.fuel_quantity = round(self.total_cost / self.price_per_liter, 2)
+        elif self.price_per_liter is None:
+            self.price_per_liter = round(self.total_cost / self.fuel_quantity, 2)
+            
+        return self
+
 
 class FuelLogUpdate(BaseModel):
     """Input: Update a fuel log entry (all optional)."""
@@ -170,6 +186,7 @@ class FuelLogUpdate(BaseModel):
     odometer_reading: Optional[float] = Field(None, gt=0)
     fuel_quantity: Optional[float] = Field(None, gt=0)
     price_per_liter: Optional[float] = Field(None, gt=0)
+    total_cost: Optional[float] = Field(None, gt=0)
     is_full_tank: Optional[bool] = None
     fuel_type: Optional[str] = None
     station_name: Optional[str] = None
