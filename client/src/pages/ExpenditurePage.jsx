@@ -104,7 +104,7 @@ export default function ExpenditurePage() {
 
   // Fuel form state
   const [fuel, setFuel] = useState({
-    date: today(), odometer: '', quantity: '', price_per_liter: '',
+    date: today(), odometer: '', quantity: '', price_per_liter: '', total_cost: '',
     is_full_tank: true, missed: false, fuel_type: 'petrol', station: '', notes: '',
   });
 
@@ -138,9 +138,29 @@ export default function ExpenditurePage() {
   const setF = (k) => (e) => setFuel(f => ({ ...f, [k]: e.target.value }));
   const setE = (k) => (e) => setExp(f => ({ ...f, [k]: e.target.value }));
 
-  const totalCost = fuel.quantity && fuel.price_per_liter
-    ? (Number(fuel.quantity) * Number(fuel.price_per_liter)).toFixed(2)
-    : '';
+  const handleFuelMetricChange = (field, value) => {
+    setFuel(prev => {
+      const next = { ...prev, [field]: value };
+      
+      const q = next.quantity === '' ? null : Number(next.quantity);
+      const p = next.price_per_liter === '' ? null : Number(next.price_per_liter);
+      const t = next.total_cost === '' ? null : Number(next.total_cost);
+      
+      if (value !== '') {
+        if (field === 'quantity') {
+          if (p !== null) next.total_cost = (value * p).toFixed(2);
+          else if (t !== null && value != 0) next.price_per_liter = (t / value).toFixed(2);
+        } else if (field === 'price_per_liter') {
+          if (q !== null) next.total_cost = (q * value).toFixed(2);
+          else if (t !== null && value != 0) next.quantity = (t / value).toFixed(2);
+        } else if (field === 'total_cost') {
+          if (q !== null && q != 0) next.price_per_liter = (value / q).toFixed(2);
+          else if (p !== null && p != 0) next.quantity = (value / p).toFixed(2);
+        }
+      }
+      return next;
+    });
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -148,19 +168,26 @@ export default function ExpenditurePage() {
     setSaving(true);
     try {
       if (category === 'fuel') {
+        const provided = [fuel.quantity, fuel.price_per_liter, fuel.total_cost].filter(v => v !== '').length;
+        if (provided < 2) {
+          setSaving(false);
+          return showToast('Please enter at least two: Volume, Price, or Total Cost', 'error');
+        }
+
         await api.fuelLogs.create(vehicle.id, {
           vehicle_id: vehicle.id,
           date: fuel.date,
           odometer_reading: Number(fuel.odometer),
-          fuel_quantity: Number(fuel.quantity),
-          price_per_liter: Number(fuel.price_per_liter),
+          fuel_quantity: fuel.quantity ? Number(fuel.quantity) : null,
+          price_per_liter: fuel.price_per_liter ? Number(fuel.price_per_liter) : null,
+          total_cost: fuel.total_cost ? Number(fuel.total_cost) : null,
           is_full_tank: fuel.is_full_tank,
           missed: fuel.missed,
           fuel_type: fuel.fuel_type,
           station_name: fuel.station || null,
           notes: fuel.notes || null,
         });
-        setFuel({ date: today(), odometer: '', quantity: '', price_per_liter: '', is_full_tank: true, missed: false, fuel_type: 'petrol', station: '', notes: '' });
+        setFuel({ date: today(), odometer: '', quantity: '', price_per_liter: '', total_cost: '', is_full_tank: true, missed: false, fuel_type: 'petrol', station: '', notes: '' });
       } else {
         await api.expenses.create(vehicle.id, {
           vehicle_id: vehicle.id,
@@ -266,27 +293,24 @@ export default function ExpenditurePage() {
                 </div>
               </div>
 
-              {/* Volume + Price per L */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              {/* Volume + Price per L + Total Cost */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
                 <div>
-                  <label className="input-label">Volume (L) *</label>
+                  <label className="input-label">Volume (L)</label>
                   <input className="input" type="number" step="0.01" placeholder="45.5"
-                    value={fuel.quantity} onChange={setF('quantity')} required />
+                    value={fuel.quantity} onChange={(e) => handleFuelMetricChange('quantity', e.target.value)} />
                 </div>
                 <div>
-                  <label className="input-label">Price per Liter (₹) *</label>
+                  <label className="input-label">Price / L (₹)</label>
                   <input className="input" type="number" step="0.01" placeholder="100.50"
-                    value={fuel.price_per_liter} onChange={setF('price_per_liter')} required />
+                    value={fuel.price_per_liter} onChange={(e) => handleFuelMetricChange('price_per_liter', e.target.value)} />
+                </div>
+                <div>
+                  <label className="input-label">Total Cost (₹)</label>
+                  <input className="input" type="number" step="0.01" placeholder="4572.75"
+                    value={fuel.total_cost} onChange={(e) => handleFuelMetricChange('total_cost', e.target.value)} />
                 </div>
               </div>
-
-              {/* Auto total cost */}
-              {totalCost && (
-                <div style={{ background: 'var(--color-primary-subtle)', border: '1px solid var(--color-border-active)', borderRadius: 'var(--radius-md)', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Auto-computed Total Cost</span>
-                  <span style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-headline)', color: 'var(--color-primary)' }}>₹{Number(totalCost).toLocaleString('en-IN')}</span>
-                </div>
-              )}
 
               {/* Station */}
               <div>
