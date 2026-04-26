@@ -75,12 +75,12 @@ A convenient PowerShell script is included to spin up the environment:
 ./run_dev.ps1
 ```
 
-*Alternatively, run the backend manually:*
+*Alternatively, run the backend manually from the project root:*
 ```bash
-cd server
-uvicorn main:app --reload --port 8000
+.\venv\Scripts\activate
+uvicorn server.main:app --reload --port 8080
 ```
-> The API documentation will be available at `http://localhost:8000/docs`.
+> The API documentation will be available at `http://localhost:8080/docs`.
 
 ---
 
@@ -90,10 +90,10 @@ uvicorn main:app --reload --port 8000
 - [x] **Phase 1:** Data Schema & Gap Analysis
 - [x] **Phase 2:** Backend Foundation (FastAPI + SQLite + Models)
 - [x] **Phase 3:** Core REST API (25 Endpoints completed)
-- [ ] **Phase 4:** API Testing & Hardening 👈 *(Current Phase)*
-- [ ] **Phase 5:** Frontend UI Scaffold (React + Vite)
-- [ ] **Phase 6:** UI Implementation (from Figma designs)
-- [ ] **Phase 7:** Analytics Visualization & Polish
+- [x] **Phase 4:** API Testing & Hardening
+- [x] **Phase 5:** Frontend UI Scaffold (React + Vite)
+- [x] **Phase 6:** UI Implementation (from Figma designs)
+- [ ] **Phase 7:** Analytics Visualization & Polish 👈 *(Current Phase)*
 
 ---
 

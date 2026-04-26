@@ -1,15 +1,17 @@
-# PowerShell script to start the FuelTrack AI environment
+# PowerShell script to start the FuelTrack AI development environment
 
 Write-Host "Starting FuelTrack AI..." -ForegroundColor Green
 
-# 1. Start Backend in a background job or new window
-Write-Host "Starting FastAPI Backend on http://localhost:8000" -ForegroundColor Cyan
-Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-Command", "cd server; ..\venv\Scripts\uvicorn.exe main:app --reload --port 8000"
+# ── Backend ───────────────────────────────────────────────────────
+# IMPORTANT: Run uvicorn from the PROJECT ROOT with `server.main:app`
+# NOT from inside the server/ folder with `main:app`
+Write-Host "Starting FastAPI Backend on http://localhost:8080" -ForegroundColor Cyan
+Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-Command", `
+  "Set-Location 'E:\Praveen\Coding Files\antigravity skills'; .\venv\Scripts\Activate.ps1; .\venv\Scripts\uvicorn.exe server.main:app --reload --port 8080"
 
-# 2. Add placeholder for frontend (for when Figma designs arrive)
-Write-Host "Frontend is currently deferred pending Figma designs." -ForegroundColor Yellow
-# Uncomment below when client/ exists
-# Write-Host "Starting Vite Frontend on http://localhost:5173" -ForegroundColor Cyan
-# Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-Command", "cd client; npm run dev"
+# ── Frontend ──────────────────────────────────────────────────────
+Write-Host "Starting Vite Frontend on http://localhost:5173" -ForegroundColor Cyan
+Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-Command", `
+  "Set-Location 'E:\Praveen\Coding Files\antigravity skills\client'; npm run dev"
 
-Write-Host "Done!" -ForegroundColor Green
+Write-Host "Both servers started. Open http://localhost:5173 in your browser." -ForegroundColor Green
