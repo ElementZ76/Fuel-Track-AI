@@ -300,7 +300,7 @@ export default function AppLayout({ children }) {
               FuelTrack AI
             </span>
           </div>
-          <p style={{ fontSize: 11, color: 'var(--color-text-muted)', paddingLeft: 36 }}>Fleet Precision</p>
+
         </div>
 
         {/* Active vehicle */}
