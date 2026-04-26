@@ -36,6 +36,7 @@ def add_fuel_log(vehicle_id: int, log_create: schemas.FuelLogCreate, db: Session
     max_odo = db.query(models.FuelLog.odometer_reading)\
                 .filter(models.FuelLog.vehicle_id == vehicle_id)\
                 .order_by(models.FuelLog.odometer_reading.desc())\
+                .limit(1)\
                 .scalar()
     if max_odo is not None and log_create.odometer_reading < max_odo:
         raise HTTPException(
