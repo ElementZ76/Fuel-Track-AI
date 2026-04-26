@@ -4,6 +4,7 @@ Combines data from fuel logs and expenses for dashboard visualizations.
 """
 
 from collections import defaultdict
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -66,10 +67,11 @@ def get_monthly_breakdown(enriched_logs: list, expenses: list):
     return result
 
 
-def get_vehicle_stats(db: Session, vehicle_id: int) -> schemas.MileageStats:
+def get_vehicle_stats(db: Session, vehicle_id: int, timeframe: str = "all") -> schemas.MileageStats:
     """
     Calculate overall vehicle statistics (fuel + expenses).
     Fetches data once, reuses enriched result for both stats and monthly breakdown.
+    Supports timeframe filtering.
     """
     vehicle = db.query(models.Vehicle).filter(models.Vehicle.id == vehicle_id).first()
     if not vehicle:
@@ -85,6 +87,20 @@ def get_vehicle_stats(db: Session, vehicle_id: int) -> schemas.MileageStats:
                  .all()
                  
     enriched_logs = enrich_fuel_logs(logs, vehicle.initial_odometer)
+    
+    # Filter by timeframe
+    now = datetime.now().date()
+    start_date = None
+    if timeframe == "fortnightly":
+        start_date = now - timedelta(days=14)
+    elif timeframe == "monthly":
+        start_date = now - timedelta(days=30)
+    elif timeframe == "yearly":
+        start_date = now - timedelta(days=365)
+        
+    if start_date:
+        enriched_logs = [log for log in enriched_logs if log['date'] >= start_date]
+        expenses = [exp for exp in expenses if exp.date >= start_date]
     
     # Calculate totals
     total_distance = sum(log['distance_km'] for log in enriched_logs if log['distance_km'])
@@ -114,6 +130,11 @@ def get_vehicle_stats(db: Session, vehicle_id: int) -> schemas.MileageStats:
     for exp in expenses:
         expense_categories[exp.category]["total"] += exp.amount
         expense_categories[exp.category]["count"] += 1
+        
+    # Inject fuel into expense categories so it shows on pie chart
+    if total_fuel_spent > 0:
+        expense_categories["fuel"]["total"] += total_fuel_spent
+        expense_categories["fuel"]["count"] += len(enriched_logs)
         
     category_breakdown = [
         schemas.CategoryBreakdown(

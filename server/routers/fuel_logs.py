@@ -183,12 +183,12 @@ def delete_fuel_log(vehicle_id: int, log_id: int, db: Session = Depends(get_db))
 stats_router = APIRouter(prefix="/vehicles/{vehicle_id}/stats", tags=["Stats"])
 
 @stats_router.get("/", response_model=schemas.MileageStats)
-def get_stats(vehicle_id: int, db: Session = Depends(get_db)):
+def get_stats(vehicle_id: int, timeframe: Optional[str] = "all", db: Session = Depends(get_db)):
     """
     Get overall mileage and expenditure stats for a vehicle.
     """
     try:
-        return get_vehicle_stats(db, vehicle_id)
+        return get_vehicle_stats(db, vehicle_id, timeframe)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 

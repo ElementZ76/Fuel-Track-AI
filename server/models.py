@@ -125,6 +125,7 @@ class Expense(Base):
     title = Column(String, nullable=False)  # e.g., 'Oil Change', 'Annual Insurance'
     amount = Column(Float, nullable=False)  # ₹ cost
     odometer_reading = Column(Float, nullable=True)  # Odometer at time of expense (optional)
+    expiry_date = Column(Date, nullable=True)  # Expiry date for insurance (optional)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 

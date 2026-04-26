@@ -249,6 +249,7 @@ class ExpenseCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=200, description="Expense title")
     amount: float = Field(..., gt=0, description="₹ cost")
     odometer_reading: Optional[float] = Field(None, ge=0, description="Odometer at time of expense")
+    expiry_date: Optional[datetime.date] = Field(None, description="Expiry date for insurance/warranties")
     notes: Optional[str] = Field(None, description="Optional details")
 
     @field_validator("category")
@@ -269,6 +270,7 @@ class ExpenseUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=200)
     amount: Optional[float] = Field(None, gt=0)
     odometer_reading: Optional[float] = Field(None, ge=0)
+    expiry_date: Optional[datetime.date] = None
     notes: Optional[str] = None
 
     @field_validator("category")
@@ -293,6 +295,7 @@ class ExpenseRead(BaseModel):
     title: str
     amount: float
     odometer_reading: Optional[float] = None
+    expiry_date: Optional[datetime.date] = None
     notes: Optional[str] = None
     created_at: datetime.datetime
 

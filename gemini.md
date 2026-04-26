@@ -79,6 +79,7 @@
   "title": "TEXT NOT NULL — e.g., 'Oil Change', 'Annual Insurance'",
   "amount": "REAL NOT NULL — ₹ cost",
   "odometer_reading": "REAL — odometer at time of expense (optional)",
+  "expiry_date": "DATE — expiry date for insurance or warranties (optional)",
   "notes": "TEXT — optional details",
   "created_at": "DATETIME DEFAULT CURRENT_TIMESTAMP"
 }
@@ -160,6 +161,7 @@
   "title": "string (required)",
   "amount": "float (required)",
   "odometer_reading": "float (optional)",
+  "expiry_date": "date (optional)",
   "notes": "string (optional)"
 }
 ```
@@ -234,6 +236,7 @@
   "title": "string",
   "amount": "float",
   "odometer_reading": "float | null",
+  "expiry_date": "date | null",
   "notes": "string | null",
   "created_at": "datetime"
 }
