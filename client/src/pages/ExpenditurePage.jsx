@@ -138,15 +138,17 @@ export default function ExpenditurePage() {
   const setF = (k) => (e) => setFuel(f => ({ ...f, [k]: e.target.value }));
   const setE = (k) => (e) => setExp(f => ({ ...f, [k]: e.target.value }));
 
-  const handleFuelMetricChange = (field, value) => {
+  const handleFuelBlur = (field) => {
     setFuel(prev => {
-      const next = { ...prev, [field]: value };
+      const next = { ...prev };
       
       const q = next.quantity === '' ? null : Number(next.quantity);
       const p = next.price_per_liter === '' ? null : Number(next.price_per_liter);
       const t = next.total_cost === '' ? null : Number(next.total_cost);
       
-      if (value !== '') {
+      const value = next[field] === '' ? null : Number(next[field]);
+      
+      if (value !== null) {
         if (field === 'quantity') {
           if (p !== null) next.total_cost = (value * p).toFixed(2);
           else if (t !== null && value != 0) next.price_per_liter = (t / value).toFixed(2);
@@ -298,17 +300,17 @@ export default function ExpenditurePage() {
                 <div>
                   <label className="input-label">Volume (L)</label>
                   <input className="input" type="number" step="0.01" placeholder="45.5"
-                    value={fuel.quantity} onChange={(e) => handleFuelMetricChange('quantity', e.target.value)} />
+                    value={fuel.quantity} onChange={setF('quantity')} onBlur={() => handleFuelBlur('quantity')} />
                 </div>
                 <div>
                   <label className="input-label">Price / L (₹)</label>
                   <input className="input" type="number" step="0.01" placeholder="100.50"
-                    value={fuel.price_per_liter} onChange={(e) => handleFuelMetricChange('price_per_liter', e.target.value)} />
+                    value={fuel.price_per_liter} onChange={setF('price_per_liter')} onBlur={() => handleFuelBlur('price_per_liter')} />
                 </div>
                 <div>
                   <label className="input-label">Total Cost (₹)</label>
                   <input className="input" type="number" step="0.01" placeholder="4572.75"
-                    value={fuel.total_cost} onChange={(e) => handleFuelMetricChange('total_cost', e.target.value)} />
+                    value={fuel.total_cost} onChange={setF('total_cost')} onBlur={() => handleFuelBlur('total_cost')} />
                 </div>
               </div>
 
