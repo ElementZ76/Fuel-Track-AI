@@ -1,43 +1,39 @@
 <div align="center">
-  <h1>🚗 FuelTrack AI</h1>
-  <p><strong>A locally-hosted vehicle fuel, mileage, and expenditure tracking application.</strong></p>
-  
-  [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
-  [![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/index.html)
-  [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-  [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+  <div style="padding: 20px;">
+    <div style="width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #8069BF, #4E4273); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #fff; margin: 0 auto 16px; font-family: 'Space Grotesk', sans-serif;">F</div>
+    <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif;">FuelTrack AI</h1>
+    <p style="margin-top: 8px; color: #A09CB0;">Automotive Precision • Fleet Telemetry • Financial Tracking</p>
+  </div>
 </div>
 
 ---
 
-## 📌 Overview
+## 📖 Overview
 
-FuelTrack AI is a modern, privacy-first, local web application designed to help you track your vehicle's fuel consumption, calculate accurate mileage (km/L), and log maintenance expenses. Inspired by robust mobile trackers like Fuelio, this tool brings comprehensive vehicle analytics directly to your local network.
-
-### ✨ Core Features
-
-*   **Multi-Vehicle Management:** Track cars, bikes, and EVs in one place.
-*   **Accurate Mileage Tracking:** Deterministic km/L calculations factoring in full vs. partial fill-ups and missed logs.
-*   **Comprehensive Expense Logging:** Track maintenance, insurance, servicing, tolls, and other non-fuel costs.
-*   **Deep Analytics:** View total expenditure, cost per km, best/worst mileage, and detailed monthly roll-ups.
-*   **Lightweight User Switcher:** Easy, PIN-based local accounts to keep data organized among multiple users.
+**FuelTrack AI** is a comprehensive, local-first web application designed to track vehicle telemetry, log fuel expenditures, and calculate precise efficiency metrics over time. Built with a focus on a premium, "Automotive Precision" design language, the platform offers users deep insights into their fleet's financial and physical performance.
 
 ---
 
-## 🏗️ Architecture (A.N.T. Protocol)
+## ✨ Key Features
 
-FuelTrack AI is built using a strict 3-Layer Separation of Concerns:
+- **Multi-Vehicle Fleet Management:** Track multiple vehicles under a single profile with dedicated telemetry for each.
+- **Precision Logging:** Granular data entry for fuel fill-ups (accounting for partial fills and missed logs) and diverse maintenance expenses.
+- **Advanced Telemetry Analytics:** Dynamic calculation of `km/L`, cost per kilometer, and overall expenditure.
+- **Rich Visualization:** Interactive trend charts and cost-breakdown visualizations using Chart.js.
+- **Local-First Architecture:** Powered by a local SQLite database utilizing Write-Ahead Logging (WAL) for speed and data integrity.
+- **Premium UI/UX:** A bespoke dark-mode interface built on React and Tailwind CSS v4.
 
-1.  **Architecture (Backend):** Python + FastAPI powering a clean, RESTful API backed by a local SQLite database (via SQLAlchemy).
-2.  **Navigation (Frontend):** *[Work in Progress]* React + Vite for a blazing fast SPA.
-3.  **Styling & Tools:** Tailwind CSS v4 + Chart.js for premium, responsive analytics visualization.
+---
 
-### Data Schema (v1)
+## 🛠️ Technology Stack
 
-*   `users`: Local profiles with SHA-256 PIN hashing.
-*   `vehicles`: Stores metadata (make, model, plate, tank capacity).
-*   `fuel_logs`: Fill-up events, auto-computing total costs.
-*   `expenses`: Granular non-fuel expenditure tracking.
+| Component | Technology | Description |
+|-----------|------------|-------------|
+| **Frontend** | React 19, Vite, Tailwind v4 | High-performance SPA with custom design system |
+| **Backend** | FastAPI (Python 3.13) | Asynchronous, type-safe REST API |
+| **Database** | SQLite + SQLAlchemy ORM | Local relational data storage with FK constraints |
+| **Routing** | React Router DOM | Client-side navigation |
+| **Charts** | Chart.js / react-chartjs-2 | Data visualization and analytics |
 
 ---
 
@@ -45,49 +41,84 @@ FuelTrack AI is built using a strict 3-Layer Separation of Concerns:
 
 ### Prerequisites
 
-*   Python 3.10+
-*   Node.js 18+ *(Frontend pending)*
-*   Git
+Ensure you have the following installed on your system:
+- **Python 3.13+**
+- **Node.js 18+**
+- **Git**
 
-### 1. Backend Setup
+### 1. Installation
+
+Clone the repository and set up the Python virtual environment:
 
 ```bash
 # Clone the repository
 git clone https://github.com/ElementZ76/Fuel-Track-AI.git
 cd Fuel-Track-AI
 
-# Create and activate a virtual environment
+# Create a virtual environment
 python -m venv venv
-# On Windows:
+
+# Activate the virtual environment
+# On Windows (PowerShell):
 .\venv\Scripts\activate
-# On Mac/Linux:
+# On WSL/Linux/Mac (Bash):
 source venv/bin/activate
 
-# Install dependencies
+# Install backend dependencies
 pip install -r server/requirements.txt
+
+# Install frontend dependencies
+cd client
+npm install
+cd ..
 ```
 
-### 2. Running the Development Server
+---
 
-Convenient scripts are included to spin up the environment:
+### 2. Running the Application
+
+You can launch the application using either the automated scripts or by starting the services manually. 
+
+#### Option A: One-Click Startup (Automated)
+
+Convenient scripts are included to spin up both the frontend and backend simultaneously.
 
 **For Windows (PowerShell):**
 ```powershell
 ./run_dev.ps1
 ```
 
-**For Mac/Linux (WSL):**
+**For Mac/Linux (WSL/Bash):**
 ```bash
 chmod +x run_dev.sh
 ./run_dev.sh
 ```
 
-*Alternatively, run the backend manually from the project root:*
+#### Option B: Manual Startup (WSL / Linux / Mac)
+
+If you prefer to run the services manually (e.g., in separate terminal windows to monitor logs), run the following commands **from the project root directory**.
+
+**Terminal 1: Start the Backend**
 ```bash
-.\venv\Scripts\activate
+# Ensure you are at the project root
+# Activate the virtual environment
+source venv/bin/activate
+
+# Start the FastAPI server on port 8080
 uvicorn server.main:app --reload --port 8080
 ```
 > The API documentation will be available at `http://localhost:8080/docs`.
+
+**Terminal 2: Start the Frontend**
+```bash
+# Ensure you are at the project root
+# Navigate to the client directory
+cd client
+
+# Start the Vite development server
+npm run dev
+```
+> The web application will be available at `http://localhost:5173`.
 
 ---
 
