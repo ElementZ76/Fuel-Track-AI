@@ -111,11 +111,17 @@ export default function DashboardPage() {
   const validLogsForChart = [...allLogs].reverse().filter(log => log.mileage_kmpl != null);
   const chartLabels = validLogsForChart.map(log => log.date);
   const mileageData = validLogsForChart.map(log => log.mileage_kmpl);
+  
+  // Average mileage baseline
+  const avgMileage = stats?.avg_mileage_kmpl ?? null;
+  const avgData = chartLabels.map(() => avgMileage);
+
   const lineData = {
     labels: chartLabels,
-    datasets: [{
-      label: 'Avg Mileage (km/L)',
-      data: mileageData,
+    datasets: [
+      {
+        label: 'Trip Efficiency (km/L)',
+        data: mileageData,
       borderColor: 'rgba(128,105,191,0.9)',
       backgroundColor: 'rgba(128,105,191,0.08)',
       borderWidth: 2,
@@ -124,6 +130,17 @@ export default function DashboardPage() {
       fill: true,
       tension: 0.35,
       spanGaps: true,
+    },
+    {
+      label: 'Overall Average',
+      data: avgData,
+      borderColor: 'rgba(107, 103, 128, 0.6)',
+      borderWidth: 1.5,
+      borderDash: [5, 5],
+      pointRadius: 0,
+      pointHoverRadius: 0,
+      fill: false,
+      tension: 0,
     }],
   };
   const lineOpts = {
