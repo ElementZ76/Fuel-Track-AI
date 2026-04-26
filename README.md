@@ -69,10 +69,17 @@ pip install -r server/requirements.txt
 
 ### 2. Running the Development Server
 
-A convenient PowerShell script is included to spin up the environment:
+Convenient scripts are included to spin up the environment:
 
+**For Windows (PowerShell):**
 ```powershell
 ./run_dev.ps1
+```
+
+**For Mac/Linux (WSL):**
+```bash
+chmod +x run_dev.sh
+./run_dev.sh
 ```
 
 *Alternatively, run the backend manually from the project root:*
