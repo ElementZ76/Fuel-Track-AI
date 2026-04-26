@@ -55,14 +55,14 @@ Clone the repository and set up the Python virtual environment:
 git clone https://github.com/ElementZ76/Fuel-Track-AI.git
 cd Fuel-Track-AI
 
-# Create a virtual environment
-python -m venv venv
-
-# Activate the virtual environment
+# Create and activate the virtual environment
 # On Windows (PowerShell):
+python -m venv venv
 .\venv\Scripts\activate
+
 # On WSL/Linux/Mac (Bash):
-source venv/bin/activate
+python3 -m venv venv_wsl
+source venv_wsl/bin/activate
 
 # Install backend dependencies
 pip install -r server/requirements.txt
@@ -102,7 +102,8 @@ If you prefer to run the services manually (e.g., in separate terminal windows t
 ```bash
 # Ensure you are at the project root
 # Activate the virtual environment
-source venv/bin/activate
+# On Windows: .\venv\Scripts\activate
+# On WSL/Linux/Mac: source venv_wsl/bin/activate
 
 # Start the FastAPI server on port 8080
 uvicorn server.main:app --reload --port 8080

@@ -14,13 +14,13 @@ trap cleanup SIGINT SIGTERM
 
 # ── Backend ───────────────────────────────────────────────────────
 echo -e "\033[0;36mStarting FastAPI Backend on http://localhost:8080\033[0m"
-# Check if venv exists
-if [ ! -d "venv" ]; then
-    echo -e "\033[0;31mError: Virtual environment not found. Please create one named 'venv' and install requirements.\033[0m"
+# Check if venv_wsl exists
+if [ ! -d "venv_wsl" ]; then
+    echo -e "\033[0;31mError: Virtual environment not found. Please create one named 'venv_wsl' (python3 -m venv venv_wsl) and install requirements.\033[0m"
     exit 1
 fi
 
-source venv/bin/activate
+source venv_wsl/bin/activate
 uvicorn server.main:app --reload --port 8080 &
 BACKEND_PID=$!
 
