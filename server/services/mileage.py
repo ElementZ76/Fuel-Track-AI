@@ -7,41 +7,8 @@ from typing import Optional, List
 from server import models
 
 
-def calculate_mileage(
-    current_odo: float, 
-    prev_odo: float, 
-    fuel_qty: float, 
-    is_full_tank: bool, 
-    missed: bool
-) -> Optional[float]:
-    """
-    Calculate fuel mileage (km/L) between two fill-ups.
-    
-    Args:
-        current_odo: Current odometer reading (km)
-        prev_odo: Previous odometer reading (km)
-        fuel_qty: Fuel quantity added in current fill-up (Liters)
-        is_full_tank: Whether current fill-up is a full tank
-        missed: Whether a fill-up was missed before this one
-        
-    Returns:
-        float: Calculated mileage in km/L
-        None: If mileage cannot be accurately calculated (partial fill, missed, invalid data)
-    """
-    # Cannot calculate if it's a partial tank fill or if previous logs were missed
-    if not is_full_tank or missed:
-        return None
-        
-    # Validation
-    if fuel_qty <= 0:
-        return None
-        
-    distance = current_odo - prev_odo
-    if distance <= 0:
-        return None
-        
-    mileage = distance / fuel_qty
-    return round(mileage, 2)
+    # Deprecated in favor of inline logic in enrich_fuel_logs
+    pass
 
 
 def enrich_fuel_logs(logs: List[models.FuelLog], initial_odometer: float) -> List[dict]:
@@ -50,34 +17,44 @@ def enrich_fuel_logs(logs: List[models.FuelLog], initial_odometer: float) -> Lis
     Requires logs to be sorted by odometer_reading ascending.
     """
     enriched_logs = []
+    
     prev_odo = initial_odometer
-    prev_is_full_tank = True # Assume initial is a baseline
+    last_full_odo = initial_odometer
+    accumulated_fuel = 0.0
+    is_valid_sequence = True
 
     for log in logs:
         log_dict = {c.name: getattr(log, c.name) for c in log.__table__.columns}
         
-        # Calculate distance
-        distance_km = log.odometer_reading - prev_odo
-        if distance_km > 0:
-            log_dict['distance_km'] = round(distance_km, 2)
-        else:
-            log_dict['distance_km'] = None
+        # Calculate step distance (since last log) for display
+        step_distance = log.odometer_reading - prev_odo
+        log_dict['distance_km'] = round(step_distance, 2) if step_distance > 0 else None
+        
+        # Accumulate fuel for mileage calculation
+        accumulated_fuel += log.fuel_quantity
+        
+        if log.missed:
+            is_valid_sequence = False
             
-        # Calculate mileage
-        mileage = calculate_mileage(
-            current_odo=log.odometer_reading,
-            prev_odo=prev_odo,
-            fuel_qty=log.fuel_quantity,
-            is_full_tank=log.is_full_tank and prev_is_full_tank,
-            missed=log.missed
-        )
-        log_dict['mileage_kmpl'] = mileage
-        
-        enriched_logs.append(log_dict)
-        
-        # Update prev for next iteration
+        # Only calculate mileage when the tank is completely full
+        if log.is_full_tank:
+            if is_valid_sequence and log.odometer_reading > last_full_odo and accumulated_fuel > 0:
+                distance_since_full = log.odometer_reading - last_full_odo
+                mileage = distance_since_full / accumulated_fuel
+                log_dict['mileage_kmpl'] = round(mileage, 2)
+            else:
+                log_dict['mileage_kmpl'] = None
+                
+            # Reset trackers for the next calculation span
+            last_full_odo = log.odometer_reading
+            accumulated_fuel = 0.0
+            is_valid_sequence = True
+        else:
+            # Partial fill: no accurate mileage can be calculated until the next full tank
+            log_dict['mileage_kmpl'] = None
+            
         prev_odo = log.odometer_reading
-        prev_is_full_tank = log.is_full_tank
+        enriched_logs.append(log_dict)
         
     # Return in original order (usually descending for display)
     return enriched_logs[::-1]

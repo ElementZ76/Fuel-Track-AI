@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Fuel, Wrench, Settings, Shield, ParkingCircle, ArrowRightLeft, Sparkles, Scissors, HelpCircle, CheckCircle, Pencil, Trash2, X, Zap } from 'lucide-react';
 import { api } from '../api/client';
 import { useApp } from '../context/AppContext';
@@ -63,9 +64,9 @@ function EntryItem({ entry, onDelete, onEdit }) {
   return (
     <div>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 10,
+        display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
         padding: '10px 0', borderBottom: '1px solid var(--color-border)',
-      }}>
+      }} onClick={() => onView(entry)}>
         <div style={{
           width: 32, height: 32, borderRadius: 8, background: 'var(--color-primary-subtle)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', flexShrink: 0
@@ -81,10 +82,10 @@ function EntryItem({ entry, onDelete, onEdit }) {
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)', flexShrink: 0 }}>
           ₹{Number(amount).toLocaleString('en-IN')}
         </span>
-        <button className="btn btn-ghost" style={{ padding: 5 }} onClick={() => onEdit(entry)}>
+        <button className="btn btn-ghost" style={{ padding: 5 }} onClick={(e) => { e.stopPropagation(); onEdit(entry); }}>
           <Pencil size={12} />
         </button>
-        <button className="btn btn-ghost" style={{ padding: 5, color: 'var(--color-error)' }} onClick={() => setConfirm(true)}>
+        <button className="btn btn-ghost" style={{ padding: 5, color: 'var(--color-error)' }} onClick={(e) => { e.stopPropagation(); setConfirm(true); }}>
           <Trash2 size={12} />
         </button>
       </div>
@@ -101,6 +102,7 @@ export default function ExpenditurePage() {
   const [recent, setRecent]     = useState([]);
   const [saving, setSaving]     = useState(false);
   const [editEntry, setEditEntry] = useState(null);
+  const [viewEntry, setViewEntry] = useState(null);
 
   // Fuel form state
   const [fuel, setFuel] = useState({
@@ -112,6 +114,37 @@ export default function ExpenditurePage() {
   const [exp, setExp] = useState({
     date: today(), title: '', amount: '', odometer: '', notes: '',
   });
+
+  useEffect(() => {
+    if (editEntry) {
+      if (editEntry._type === 'fuel') {
+        setCategory('fuel');
+        setFuel({
+          id: editEntry.id,
+          date: editEntry.date,
+          odometer: editEntry.odometer_reading,
+          quantity: editEntry.fuel_quantity,
+          price_per_liter: editEntry.price_per_liter,
+          total_cost: editEntry.total_cost,
+          is_full_tank: editEntry.is_full_tank,
+          missed: editEntry.missed,
+          fuel_type: editEntry.fuel_type,
+          station: editEntry.station_name || '',
+          notes: editEntry.notes || ''
+        });
+      } else {
+        setCategory(editEntry.category);
+        setExp({
+          id: editEntry.id,
+          date: editEntry.date,
+          title: editEntry.title,
+          amount: editEntry.amount,
+          odometer: editEntry.odometer_reading || '',
+          notes: editEntry.notes || ''
+        });
+      }
+    }
+  }, [editEntry]);
 
   async function loadData() {
     if (!vehicle) return;
@@ -176,7 +209,7 @@ export default function ExpenditurePage() {
           return showToast('Please enter at least two: Volume, Price, or Total Cost', 'error');
         }
 
-        await api.fuelLogs.create(vehicle.id, {
+        const payload = {
           vehicle_id: vehicle.id,
           date: fuel.date,
           odometer_reading: Number(fuel.odometer),
@@ -188,10 +221,15 @@ export default function ExpenditurePage() {
           fuel_type: fuel.fuel_type,
           station_name: fuel.station || null,
           notes: fuel.notes || null,
-        });
+        };
+
+        if (fuel.id) await api.fuelLogs.update(vehicle.id, fuel.id, payload);
+        else await api.fuelLogs.create(vehicle.id, payload);
+
+        setEditEntry(null);
         setFuel({ date: today(), odometer: '', quantity: '', price_per_liter: '', total_cost: '', is_full_tank: true, missed: false, fuel_type: 'petrol', station: '', notes: '' });
       } else {
-        await api.expenses.create(vehicle.id, {
+        const payload = {
           vehicle_id: vehicle.id,
           date: exp.date,
           category,
@@ -199,10 +237,15 @@ export default function ExpenditurePage() {
           amount: Number(exp.amount),
           odometer_reading: exp.odometer ? Number(exp.odometer) : null,
           notes: exp.notes || null,
-        });
+        };
+
+        if (exp.id) await api.expenses.update(vehicle.id, exp.id, payload);
+        else await api.expenses.create(vehicle.id, payload);
+
+        setEditEntry(null);
         setExp({ date: today(), title: '', amount: '', odometer: '', notes: '' });
       }
-      showToast('Entry saved successfully!', 'success');
+      showToast(editEntry ? 'Entry updated successfully!' : 'Entry saved successfully!', 'success');
       loadData();
     } catch (err) {
       showToast(err.message, 'error');
@@ -351,10 +394,23 @@ export default function ExpenditurePage() {
               onChange={isFuelCat ? setF('notes') : setE('notes')} style={{ minHeight: 72 }} />
           </div>
 
-          <button type="submit" className="btn btn-primary" disabled={saving || !vehicle}
-            style={{ height: 46, fontSize: 15, marginTop: 4 }}>
-            {saving ? 'Saving…' : '+ Add Entry'}
-          </button>
+          <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+            <button type="submit" className="btn btn-primary" disabled={saving || !vehicle}
+              style={{ flex: 1, height: 46, fontSize: 15 }}>
+              {saving ? 'Saving…' : (editEntry ? 'Update Entry' : '+ Add Entry')}
+            </button>
+            {editEntry && (
+              <button type="button" className="btn btn-secondary" disabled={saving}
+                style={{ height: 46, padding: '0 20px' }}
+                onClick={() => {
+                  setEditEntry(null);
+                  setFuel({ date: today(), odometer: '', quantity: '', price_per_liter: '', total_cost: '', is_full_tank: true, missed: false, fuel_type: 'petrol', station: '', notes: '' });
+                  setExp({ date: today(), title: '', amount: '', odometer: '', notes: '' });
+                }}>
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
 
         {/* ── Right Panel ── */}
@@ -387,20 +443,114 @@ export default function ExpenditurePage() {
 
           {/* Recent Entries */}
           <div className="card" style={{ flex: 1 }}>
-            <h3 style={{ fontFamily: 'var(--font-headline)', fontSize: 13, fontWeight: 600, marginBottom: 4, color: 'var(--color-text-secondary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              Recent Entries
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <h3 style={{ fontFamily: 'var(--font-headline)', fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                Recent Entries
+              </h3>
+              <Link to="/logs" style={{ fontSize: 12, color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}>
+                View All →
+              </Link>
+            </div>
             {recent.length === 0 ? (
               <p style={{ fontSize: 13, color: 'var(--color-text-muted)', padding: '16px 0' }}>No entries yet.</p>
             ) : (
               recent.map(entry => (
                 <EntryItem key={`${entry._type}-${entry.id}`} entry={entry}
-                  onDelete={handleDelete} onEdit={setEditEntry} />
+                  onDelete={handleDelete} onEdit={setEditEntry} onView={setViewEntry} />
               ))
             )}
           </div>
         </div>
       </div>
+
+      {viewEntry && (
+        <Modal title={viewEntry._type === 'fuel' ? 'Fuel Log Details' : 'Expense Details'} onClose={() => setViewEntry(null)}>
+          <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div>
+                <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Date</p>
+                <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>{viewEntry.date}</p>
+              </div>
+              <div>
+                <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Odometer</p>
+                <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>{viewEntry.odometer_reading} km</p>
+              </div>
+            </div>
+            
+            {viewEntry._type === 'fuel' ? (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div>
+                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Quantity</p>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>{viewEntry.fuel_quantity} L</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Price per Liter</p>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>₹{viewEntry.price_per_liter}</p>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div>
+                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Total Cost</p>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>₹{viewEntry.total_cost}</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Mileage (km/L)</p>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-primary)' }}>
+                      {viewEntry.mileage_kmpl ? `${viewEntry.mileage_kmpl} km/L` : '—'}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Flags</p>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                    <span className="badge">{viewEntry.fuel_type}</span>
+                    {viewEntry.is_full_tank ? (
+                      <span className="badge" style={{ background: 'var(--color-primary-subtle)', color: 'var(--color-primary)' }}>Full Tank</span>
+                    ) : (
+                      <span className="badge" style={{ background: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}>Partial Fill</span>
+                    )}
+                    {viewEntry.missed && <span className="badge" style={{ background: 'var(--color-error)', color: '#fff' }}>Missed Prior Log</span>}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Title</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>{viewEntry.title}</p>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div>
+                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Category</p>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>{viewEntry.category}</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Amount</p>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>₹{viewEntry.amount}</p>
+                  </div>
+                </div>
+              </>
+            )}
+            
+            {viewEntry.station_name && (
+              <div>
+                <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Station / Vendor</p>
+                <p style={{ fontSize: 14, color: 'var(--color-text-primary)' }}>{viewEntry.station_name}</p>
+              </div>
+            )}
+            
+            {viewEntry.notes && (
+              <div>
+                <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Notes</p>
+                <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', background: 'var(--color-bg-elevated)', padding: 10, borderRadius: 6, marginTop: 4 }}>
+                  {viewEntry.notes}
+                </p>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

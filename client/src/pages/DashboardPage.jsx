@@ -71,6 +71,7 @@ export default function DashboardPage() {
   const { vehicle, showToast } = useApp();
   const [stats, setStats]     = useState(null);
   const [logs, setLogs]       = useState([]);
+  const [allLogs, setAllLogs] = useState([]);
   const [monthly, setMonthly] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -84,6 +85,7 @@ export default function DashboardPage() {
         api.stats.monthly(vehicle.id),
       ]);
       setStats(s);
+      setAllLogs(l);
       setLogs(l.slice(0, 5));
       setMonthly(m);
     } catch (err) {
@@ -105,9 +107,10 @@ export default function DashboardPage() {
   const fmt = (n, d = 2) => n != null ? Number(n).toFixed(d) : '—';
   const fmtINR = (n) => n != null ? `₹${Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : '—';
 
-  // Chart data
-  const chartLabels = monthly.map(m => m.month);
-  const mileageData = monthly.map(m => m.avg_mileage ?? null);
+  // Chart data (plot individual valid logs chronologically)
+  const validLogsForChart = [...allLogs].reverse().filter(log => log.mileage_kmpl != null);
+  const chartLabels = validLogsForChart.map(log => log.date);
+  const mileageData = validLogsForChart.map(log => log.mileage_kmpl);
   const lineData = {
     labels: chartLabels,
     datasets: [{
@@ -189,8 +192,8 @@ export default function DashboardPage() {
             Mileage Trend
           </h3>
           {loading ? <SkeletonCard height={200} /> : (
-            monthly.length === 0 ? (
-              <EmptyChart label="Add fill-ups to see your mileage trend" />
+            validLogsForChart.length === 0 ? (
+              <EmptyChart label="Add full-tank fill-ups to see your mileage trend" />
             ) : (
               <div style={{ height: 220 }}>
                 <Line data={lineData} options={lineOpts} />
