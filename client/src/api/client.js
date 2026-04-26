@@ -59,7 +59,7 @@ export const api = {
 
   /* ── Stats ────────────────────────────────────────── */
   stats: {
-    overview: (vid)       => request(`/vehicles/${vid}/stats/`),
+    overview: (vid, timeframe) => request(`/vehicles/${vid}/stats/${timeframe ? `?timeframe=${timeframe}` : ''}`),
     monthly:  (vid)       => request(`/vehicles/${vid}/stats/monthly`),
   },
 

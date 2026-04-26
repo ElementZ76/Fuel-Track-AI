@@ -74,13 +74,14 @@ export default function DashboardPage() {
   const [allLogs, setAllLogs] = useState([]);
   const [monthly, setMonthly] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [timeframe, setTimeframe] = useState('all');
 
   async function load() {
     if (!vehicle) return;
     setLoading(true);
     try {
       const [s, l, m] = await Promise.all([
-        api.stats.overview(vehicle.id),
+        api.stats.overview(vehicle.id, timeframe),
         api.fuelLogs.list(vehicle.id),
         api.stats.monthly(vehicle.id),
       ]);
@@ -95,7 +96,7 @@ export default function DashboardPage() {
     }
   }
 
-  useEffect(() => { load(); }, [vehicle?.id]);
+  useEffect(() => { load(); }, [vehicle?.id, timeframe]);
 
   if (!vehicle) return (
     <div style={{ padding: 32 }}>
@@ -221,9 +222,22 @@ export default function DashboardPage() {
 
         {/* Cost Breakdown */}
         <div className="card">
-          <h3 style={{ fontFamily: 'var(--font-headline)', fontSize: 14, fontWeight: 600, marginBottom: 16, color: 'var(--color-text-primary)' }}>
-            Cost Breakdown
-          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <h3 style={{ fontFamily: 'var(--font-headline)', fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>
+              Cost Breakdown
+            </h3>
+            <select 
+              value={timeframe} 
+              onChange={(e) => setTimeframe(e.target.value)}
+              className="input"
+              style={{ padding: '4px 8px', fontSize: 12, width: 'auto', backgroundColor: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', borderRadius: 6 }}
+            >
+              <option value="all">All Time</option>
+              <option value="yearly">This Year</option>
+              <option value="monthly">This Month</option>
+              <option value="fortnightly">Fortnightly</option>
+            </select>
+          </div>
           {loading ? <SkeletonCard height={200} /> : (
             catData.length === 0 ? (
               <EmptyChart label="No expenses logged yet" />

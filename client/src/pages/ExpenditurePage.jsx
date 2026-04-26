@@ -8,15 +8,23 @@ import Modal from '../components/Modal';
 /* ─── Category config ────────────────────────────────── */
 const CATEGORIES = [
   { key: 'fuel',        label: 'Fuel',        icon: <Fuel size={14} /> },
-  { key: 'maintenance', label: 'Maintenance',  icon: <Wrench size={14} /> },
-  { key: 'service',     label: 'Service',      icon: <Settings size={14} /> },
-  { key: 'insurance',   label: 'Insurance',    icon: <Shield size={14} /> },
-  { key: 'parking',     label: 'Parking',      icon: <ParkingCircle size={14} /> },
-  { key: 'tolls',       label: 'Tolls',        icon: <ArrowRightLeft size={14} /> },
-  { key: 'wash',        label: 'Wash',         icon: <Sparkles size={14} /> },
-  { key: 'repairs',     label: 'Repairs',      icon: <Scissors size={14} /> },
-  { key: 'tires',       label: 'Tires',        icon: <Zap size={14} /> },
-  { key: 'other',       label: 'Other',        icon: <HelpCircle size={14} /> },
+  { key: 'maintenance', label: 'Maintenance', icon: <Wrench size={14} /> },
+  { key: 'insurance',   label: 'Insurance',   icon: <Shield size={14} /> },
+  { key: 'other',       label: 'Other',       icon: <HelpCircle size={14} /> },
+];
+
+const MAINTENANCE_TYPES = [
+  { key: 'maintenance', label: 'General Maintenance' },
+  { key: 'service',     label: 'General Service' },
+  { key: 'repairs',     label: 'Repairs' },
+  { key: 'tires',       label: 'Tires' },
+  { key: 'wash',        label: 'Wash' },
+];
+
+const OTHER_TYPES = [
+  { key: 'other',       label: 'Other' },
+  { key: 'tolls',       label: 'Tolls' },
+  { key: 'parking',     label: 'Parking' },
 ];
 
 const FUEL_TYPES = ['petrol', 'diesel', 'cng'];
@@ -56,10 +64,11 @@ function DeleteConfirm({ onConfirm, onCancel }) {
 function EntryItem({ entry, onDelete, onEdit }) {
   const [confirm, setConfirm] = useState(false);
   const isFuel = !!entry.fuel_quantity;
-  const Icon = isFuel ? Fuel : Wrench;
+  const Icon = isFuel ? Fuel : Shield;
   const label = isFuel ? `${entry.fuel_quantity}L fill-up` : entry.title;
   const amount = isFuel ? entry.total_cost : entry.amount;
   const dateStr = isFuel ? entry.date : entry.date;
+  const odo = entry.odometer_reading;
 
   return (
     <div>
@@ -77,7 +86,10 @@ function EntryItem({ entry, onDelete, onEdit }) {
           <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {label}
           </p>
-          <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{dateStr}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {odo != null && <p style={{ fontSize: 11, color: 'var(--color-primary)', fontWeight: 600 }}>{Number(odo).toLocaleString('en-IN')} km</p>}
+            <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{dateStr}</p>
+          </div>
         </div>
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)', flexShrink: 0 }}>
           ₹{Number(amount).toLocaleString('en-IN')}
@@ -107,13 +119,20 @@ export default function ExpenditurePage() {
   // Fuel form state
   const [fuel, setFuel] = useState({
     date: today(), odometer: '', quantity: '', price_per_liter: '', total_cost: '',
-    is_full_tank: true, missed: false, fuel_type: 'petrol', station: '', notes: '',
+    is_full_tank: true, missed: false, fuel_type: '', station: '', notes: '',
   });
 
   // Expense form state
   const [exp, setExp] = useState({
-    date: today(), title: '', amount: '', odometer: '', notes: '',
+    date: today(), title: '', amount: '', odometer: '', notes: '', expiry_date: '',
+    sub_category: '',
   });
+
+  useEffect(() => {
+    if (vehicle) {
+      setFuel(prev => ({ ...prev, fuel_type: vehicle.fuel_type }));
+    }
+  }, [vehicle]);
 
   useEffect(() => {
     if (editEntry) {
@@ -133,14 +152,19 @@ export default function ExpenditurePage() {
           notes: editEntry.notes || ''
         });
       } else {
-        setCategory(editEntry.category);
+        const mainCat = ['maintenance', 'service', 'repairs', 'tires', 'wash'].includes(editEntry.category) ? 'maintenance' :
+                        ['parking', 'tolls', 'other'].includes(editEntry.category) ? 'other' : editEntry.category;
+        
+        setCategory(mainCat);
         setExp({
           id: editEntry.id,
           date: editEntry.date,
           title: editEntry.title,
           amount: editEntry.amount,
           odometer: editEntry.odometer_reading || '',
-          notes: editEntry.notes || ''
+          notes: editEntry.notes || '',
+          expiry_date: editEntry.expiry_date || '',
+          sub_category: editEntry.category,
         });
       }
     }
@@ -229,13 +253,18 @@ export default function ExpenditurePage() {
         setEditEntry(null);
         setFuel({ date: today(), odometer: '', quantity: '', price_per_liter: '', total_cost: '', is_full_tank: true, missed: false, fuel_type: 'petrol', station: '', notes: '' });
       } else {
+        const finalCategory = (category === 'maintenance' || category === 'other') 
+          ? (exp.sub_category || category) 
+          : category;
+
         const payload = {
           vehicle_id: vehicle.id,
           date: exp.date,
-          category,
+          category: finalCategory,
           title: exp.title,
           amount: Number(exp.amount),
           odometer_reading: exp.odometer ? Number(exp.odometer) : null,
+          expiry_date: exp.expiry_date || null,
           notes: exp.notes || null,
         };
 
@@ -243,7 +272,7 @@ export default function ExpenditurePage() {
         else await api.expenses.create(vehicle.id, payload);
 
         setEditEntry(null);
-        setExp({ date: today(), title: '', amount: '', odometer: '', notes: '' });
+        setExp({ date: today(), title: '', amount: '', odometer: '', notes: '', expiry_date: '', sub_category: '' });
       }
       showToast(editEntry ? 'Entry updated successfully!' : 'Entry saved successfully!', 'success');
       loadData();
@@ -323,21 +352,6 @@ export default function ExpenditurePage() {
           {/* Fuel-specific fields */}
           {isFuelCat ? (
             <>
-              {/* Fuel Type */}
-              <div>
-                <label className="input-label">Fuel Type</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {FUEL_TYPES.map(ft => (
-                    <button key={ft} type="button"
-                      className={`tab-item ${fuel.fuel_type === ft ? 'active' : ''}`}
-                      style={{ flex: 1, justifyContent: 'center' }}
-                      onClick={() => setFuel(f => ({ ...f, fuel_type: ft }))}>
-                      {ft.charAt(0).toUpperCase() + ft.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Volume + Price per L + Total Cost */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
                 <div>
@@ -372,16 +386,49 @@ export default function ExpenditurePage() {
             </>
           ) : (
             <>
+              {/* Sub-category Dropdown */}
+              {category === 'maintenance' && (
+                <div>
+                  <label className="input-label">Maintenance Type *</label>
+                  <select className="input" value={exp.sub_category} onChange={setE('sub_category')} required>
+                    <option value="">Select Type...</option>
+                    {MAINTENANCE_TYPES.map(mt => (
+                      <option key={mt.key} value={mt.key}>{mt.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {category === 'other' && (
+                <div>
+                  <label className="input-label">Other Type *</label>
+                  <select className="input" value={exp.sub_category} onChange={setE('sub_category')} required>
+                    <option value="">Select Type...</option>
+                    {OTHER_TYPES.map(ot => (
+                      <option key={ot.key} value={ot.key}>{ot.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Non-fuel: Title + Amount */}
               <div>
-                <label className="input-label">Title *</label>
-                <input className="input" placeholder="e.g. Oil Change, Annual Insurance"
+                <label className="input-label">{category === 'insurance' ? 'Insurance Provider *' : 'Title *'}</label>
+                <input className="input" placeholder={category === 'insurance' ? 'e.g. HDFC Ergo, LIC' : 'e.g. Oil Change, New Tires'}
                   value={exp.title} onChange={setE('title')} required />
               </div>
-              <div>
-                <label className="input-label">Amount (₹) *</label>
-                <input className="input" type="number" step="0.01" placeholder="2500"
-                  value={exp.amount} onChange={setE('amount')} required />
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div>
+                  <label className="input-label">{category === 'insurance' ? 'Premium Amount (₹) *' : 'Amount (₹) *'}</label>
+                  <input className="input" type="number" step="0.01" placeholder="2500"
+                    value={exp.amount} onChange={setE('amount')} required />
+                </div>
+                {category === 'insurance' && (
+                  <div>
+                    <label className="input-label">Expiry Date</label>
+                    <input className="input" type="date" value={exp.expiry_date} onChange={setE('expiry_date')} />
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -404,8 +451,8 @@ export default function ExpenditurePage() {
                 style={{ height: 46, padding: '0 20px' }}
                 onClick={() => {
                   setEditEntry(null);
-                  setFuel({ date: today(), odometer: '', quantity: '', price_per_liter: '', total_cost: '', is_full_tank: true, missed: false, fuel_type: 'petrol', station: '', notes: '' });
-                  setExp({ date: today(), title: '', amount: '', odometer: '', notes: '' });
+                  setFuel({ date: today(), odometer: '', quantity: '', price_per_liter: '', total_cost: '', is_full_tank: true, missed: false, fuel_type: vehicle?.fuel_type || '', station: '', notes: '' });
+                  setExp({ date: today(), title: '', amount: '', odometer: '', notes: '', expiry_date: '', sub_category: '' });
                 }}>
                 Cancel
               </button>
@@ -530,6 +577,12 @@ export default function ExpenditurePage() {
                     <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>₹{viewEntry.amount}</p>
                   </div>
                 </div>
+                {viewEntry.expiry_date && (
+                  <div>
+                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Expiry Date</p>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-error)' }}>{viewEntry.expiry_date}</p>
+                  </div>
+                )}
               </>
             )}
             
