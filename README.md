@@ -2,7 +2,7 @@
   <div style="padding: 20px;">
     <div style="width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #8069BF, #4E4273); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #fff; margin: 0 auto 16px; font-family: 'Space Grotesk', sans-serif;">F</div>
     <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif;">FuelTrack AI</h1>
-    <p style="margin-top: 8px; color: #A09CB0;">Automotive Precision • Fleet Telemetry • Financial Tracking</p>
+    <p style="margin-top: 8px; color: #A09CB0;">Fleet Telemetry • Financial Tracking</p>
   </div>
 
   <p>
@@ -44,6 +44,36 @@ Whether you're tracking a daily commuter or a fleet of vehicles, FuelTrack AI pr
 | **Database** | SQLite + SQLAlchemy ORM | Local relational data storage with FK constraints |
 | **Routing** | React Router DOM | Client-side navigation |
 | **Charts** | Chart.js / react-chartjs-2 | Data visualization and analytics |
+
+---
+
+## 📂 Project Structure
+
+```text
+Fuel-Track-AI/
+├── architecture/         # System design SOPs and protocols
+├── client/               # React + Vite frontend
+│   ├── public/
+│   ├── src/
+│   │   ├── api/          # Axios API client setup
+│   │   ├── components/   # Reusable UI components
+│   │   ├── context/      # React context (Auth, etc.)
+│   │   ├── pages/        # Dashboard, Analysis, Expenses, etc.
+│   │   └── App.jsx
+│   └── package.json
+├── server/               # FastAPI backend
+│   ├── routers/          # API endpoints (auth, vehicles, fuel, expenses)
+│   ├── services/         # Business logic (mileage, stats calculation)
+│   ├── database.py       # SQLAlchemy setup
+│   ├── main.py           # FastAPI entry point
+│   ├── models.py         # DB schemas
+│   └── schemas.py        # Pydantic models
+├── tools/                # Utility scripts
+├── gemini.md             # Project Constitution & Data Schemas
+├── run_dev.ps1           # Windows startup script
+├── run_dev.sh            # Linux/Mac startup script
+└── README.md
+```
 
 ---
 
